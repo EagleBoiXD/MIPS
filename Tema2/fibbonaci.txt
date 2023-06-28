@@ -1,0 +1,43 @@
+Incerc sa fac fibonacci
+-----------------------
+ideea e urmatoarea :
+am a,b variabile care tin minte elementele curente ale 
+sirului lui fibo care trebuie generate.
+un loop de n ori determina cate elemente vor fi 
+generate cu tot cu primele doua(1 si 1).
+that's it.
+
+atac problema:
+trebuie sa am in zona de date pe n pentru a cunoaste 
+cate numere vrem sa generam.
+in loc de a si b putem folosi registre de uz general
+
+.data
+	n: .word 10
+.text
+	lw $t0,n
+	
+	addi $t1,$0,1
+	addi $t2,$0,1 // t1 si t2 sunt a si b
+	move $a0,$t1
+	li $v0,1
+	syscall
+	move $a0,$t2 //doar de forma
+	syscall
+	addi $t3,$0,0 // counter	
+	addi $t4,$t0,-2 // limita
+loop:
+	bge $t4,$t0 gata //iesire dupa n numere generate (cu tot cu 1 si 1)
+	add $t5,$t1,$t2  //c = a + b
+	move $t2,$t1     //b = a
+	move $t1,$t5     //a = c
+	move $a0,$t1
+	syscall
+	addi $t4,$t4,1
+	j loop
+gata:
+	nop
+	
+	
+	
+	

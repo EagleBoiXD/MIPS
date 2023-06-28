@@ -13,30 +13,30 @@ cate numere vrem sa generam.
 in loc de a si b putem folosi registre de uz general
 
 .data
-	n: .word 10
+	n: .word 10  //intiger in sectiunea de date 0x1000 0000
 .text
-	lw $t0,n
+	lw $t0,n  //incarcat in registru
 	
 	addi $t1,$0,1
 	addi $t2,$0,1 // t1 si t2 sunt a si b
-	move $a0,$t1
-	li $v0,1
-	syscall
-	move $a0,$t2 //doar de forma
-	syscall
-	addi $t3,$0,0 // counter	
-	addi $t4,$t0,-2 // limita
+	move $a0,$t1  //pus in a0 care e registru argument
+	li $v0,1      // v0 are functie care va fi apelata 1->afisare de integer
+	syscall       //apelare al doilea 1
+	move $a0,$t2  //doar de forma
+	syscall       //apelare al doilea 1
+	addi $t3,$0,0 // counter pentru stiut cati pasi
+	addi $t4,$t0,-2 // limita n - 2 cuz 1 si 1 deja afisate
 loop:
 	bge $t4,$t0 gata //iesire dupa n numere generate (cu tot cu 1 si 1)
 	add $t5,$t1,$t2  //c = a + b
 	move $t2,$t1     //b = a
 	move $t1,$t5     //a = c
-	move $a0,$t1
+	move $a0,$t1     //afisam elementele sirului fiboussy
 	syscall
 	addi $t4,$t4,1
 	j loop
 gata:
-	nop
+	nop  //no operation
 	
 	
 	

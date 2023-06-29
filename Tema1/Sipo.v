@@ -1,4 +1,4 @@
-module topSISO;//merge acum
+module topSIPO;//merge acum
     reg[3:0]a;
     wire si,d0,d1,d2,dout;
     wire[3:0] pout;

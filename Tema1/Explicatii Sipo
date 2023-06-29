@@ -1,0 +1,2 @@
+Modulul de intrare serial trimite si un semnal "check" care intra in paralelout si ii spune cand va fi gata semnalul de 4 biti pe cei 4 flipflops 
+Atunci cand counter este 1 check este 1 si out-ul de la paralelout poate primi rezultatul, altfel primeste X.

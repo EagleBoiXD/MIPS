@@ -1,12 +1,14 @@
 module PC(in,clk,out);
   input [31:0]in;
   input clk;
-  output [31:0]out;
+  output reg [31:0]out;
   always@(posedge clk)
     out<=in;
 endmodule
 
 module InstrMem(in,out);
+  input [31:0] in;
+  output [31:0] out;
   // cititre din fisier a instructiunilor
   // out e codificarea instructiunii
   // in e adresa din fisier 
@@ -15,7 +17,7 @@ module InstrMem(in,out);
   
 endmodule
 
-module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOP, MemWrite, ALUSrc, RegWrite);
+module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOp, MemWrite, ALUSrc, RegWrite);
   input [5:0] opcode;
   output RegDst, Jump, Branch, MemRead, MemToReg,  MemWrite, ALUSrc, RegWrite;
   output [1:0] ALUOp;
@@ -27,7 +29,7 @@ endmodule
 module MUX2_1 #(parameter n = 1) (a,b,sel,out);
   input [n-1:0]a,b;
   input sel; //mereu pe 1 bit
-  output [n-1:0]out;
+  output reg [n-1:0]out;
   always@(sel)
    	begin
       if(sel==0)

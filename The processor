@@ -1,0 +1,119 @@
+module PC(in,clk,out);
+  input [31:0]in;
+  input clk;
+  output [31:0]out;
+  always@(posedge clk)
+    out<=in;
+endmodule
+
+module InstrMem(in,out);
+  // cititre din fisier a instructiunilor
+  // out e codificarea instructiunii
+  // in e adresa din fisier 
+  // fiecare instructiune are 4bytes
+  
+  
+endmodule
+
+module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOP, MemWrite, ALUSrc, RegWrite);
+  input [5:0] opcode;
+  output RegDst, Jump, Branch, MemRead, MemToReg,  MemWrite, ALUSrc, RegWrite;
+  output [1:0] ALUOp;
+  
+  // de facut case
+
+endmodule
+
+module MUX2_1 #(parameter n = 1) (a,b,sel,out);
+  input [n-1:0]a,b;
+  input sel; //mereu pe 1 bit
+  output [n-1:0]out;
+  always@(sel)
+   	begin
+      if(sel==0)
+        out<=a;
+      else
+        out<=b;
+    end
+  
+endmodule
+
+module Sign_Extend(in,out);
+  input [15:0] in;
+  output [31:0] out;
+  //adauga 16 biti de 0 la dreapta
+  assign out = {16'b0,in};
+endmodule
+
+module Registers(ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
+  input [5:0]ReadReg1,ReadReg2,WriteReg;
+  input RegWrite,WriteData;
+  output [5:0] ReadData1,ReadData2;
+  // primeste bucatile de instructiune
+  // based on ce tip de instructine e, poate cere citiri/scrieri de registru/memorie
+endmodule
+
+module Add4(in,out);
+  input [31:0]in;
+  output [31:0]out;
+  assign out=in+4;
+endmodule
+
+module ShiftLeft2_26(in,out);
+  input [25:0]in;
+  output [27:0]out;
+  assign out={in,2'b0};
+endmodule
+
+module ShiftLeft2_32(in,out);
+  input [31:0]in;
+  output [31:0]out;
+  assign out={in[29:0],2'b0};
+endmodule
+
+module Add32b(a,b,out);
+  input[31:0]a,b;
+  output[31:0]out;
+  assign out=a+b;
+  
+endmodule
+
+module ALUControl(fn,ALUOp,out);
+  input [5:0] fn;
+  input [1:0] ALUOp;
+  output [2:0] out;
+  // de facut selectia de operatii bazat pe aluop
+endmodule
+
+module AND_gate(a,b,out);
+  input a,b;
+  output reg out;
+  always@(a or b)
+    begin
+    	if(a==1 && b==1)
+     	 out<=1;
+  		else out<=0;
+  	end
+endmodule
+
+module ALU(a,b,ALUControl,rez,zero);
+  input [31:0]a,b;
+  input [2:0]ALUControl;
+  output [31:0] rez;
+  output zero;
+  // calcule de facut
+endmodule
+
+module DataMemory(address,WriteData,MemWrite,ReadData);
+  input [31:0] address, WriteData;
+  input MemWrite;
+  output [31:0] ReadData;
+  // de facut scriere in memorie
+endmodule
+
+module concat(a,b,out); //miau
+  input [27:0] a;
+  input [3:0] b;
+  output [31:0] out;
+  assign out = {b,a};
+endmodule

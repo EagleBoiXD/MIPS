@@ -111,7 +111,7 @@ module DataMemory(address,WriteData,MemWrite,ReadData);
   // de facut scriere in memorie
 endmodule
 
-module concat(a,b,out); //miau
+module concat(a,b,out); //pentru sarit undeva branch
   input [27:0] a;
   input [3:0] b;
   output [31:0] out;

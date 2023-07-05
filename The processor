@@ -1,19 +1,33 @@
-module PC(in,clk,out);
+module tb;
+    reg reset,clk;
+
+
+
+endmodule
+
+module PC(in,clk,reset,out);
   input [31:0]in;
-  input clk;
+  input clk,reset;
   output reg [31:0]out;
   always@(posedge clk)
+    if(reset==1)
+    out=0;
+    else
     out<=in;
 endmodule
 
 module InstrMem(in,out);
   input [31:0] in;
   output [31:0] out;
+  reg [31:0] instr [199:0];
   // cititre din fisier a instructiunilor
   // out e codificarea instructiunii
   // in e adresa din fisier 
   // fiecare instructiune are 4bytes
-  
+  initial begin
+    $readmemh("instr.txt",instr,0,10); //citire de instructiuni toate deodata la inceputul rularii
+    
+  end
   
 endmodule
 
@@ -57,12 +71,23 @@ module Sign_Extend(in,out);
   assign out = {16'b0,in};
 endmodule
 
-module Registers(ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
-  input [5:0]ReadReg1,ReadReg2,WriteReg;
-  input RegWrite,WriteData;
-  output [5:0] ReadData1,ReadData2;
-  // primeste bucatile de instructiune
-  // based on ce tip de instructine e, poate cere citiri/scrieri de registru/memorie
+module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
+  input [4:0]ReadReg1,ReadReg2,WriteReg; //registrii care sunt reprezentati pe 5 biti
+  input RegWrite,clk; // regwrite flag pentru asta
+  input [31:0] WriteData; //writedata pentru scris in writereg,data pe 32 biti
+  output reg [31:0] ReadData1,ReadData2;
+  reg [31:0] regs [4:0]; //32 de registrii pe 32 de biti
+  integer i;
+  initial begin
+  for(i=0;i<31;i=i+1) // initializare toti registrii cu 0
+    regs[i]=0;
+  end
+  always @(posedge clk) //flagul
+        if(RegWrite==1) begin
+            regs[WriteReg]<=WriteData; // in registrul writereg scriu writedata
+            ReadData1=regs[ReadReg1];
+            ReadData2=regs[ReadReg2];
+        end
 endmodule
 
 module Add4(in,out);

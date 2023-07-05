@@ -2,7 +2,10 @@ module tb;
     reg reset,clk;
     wire [31:0] nextpc,currentpc,pc4;
     PC pc(nextpc,clk,reset,currentpc);
-    ADD4(currentpc,pc4);
+    Add4(currentpc,pc4);
+    
+    initial clk=0;
+    always #5 clk=~clk;
     
 
 endmodule

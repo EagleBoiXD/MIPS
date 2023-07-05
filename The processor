@@ -19,11 +19,21 @@ endmodule
 
 module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOp, MemWrite, ALUSrc, RegWrite);
   input [5:0] opcode;
-  output RegDst, Jump, Branch, MemRead, MemToReg,  MemWrite, ALUSrc, RegWrite;
-  output [1:0] ALUOp;
+  output reg RegDst, Jump, Branch, MemRead, MemToReg,  MemWrite, ALUSrc, RegWrite;
+  output reg [1:0] ALUOp;
   
   // de facut case
-
+  always@(opcode)
+    casex(opcode)
+        6'b000000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b1_0_0_0_0_10_0_0_1; //R-TYPE
+        6'b100011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b0_0_0_1_1_00_0_1_1; //LW
+        6'b101011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_0_0_X_00_1_1_0; //SW
+        6'b000100: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_1_0_X_01_0_0_0; //BEQ
+        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b1_0_0_0_0_00_0_1_1; //ADDI
+        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_1_0_X_0_XX_0_X_0; //J
+        //doar cateva instructiuni
+    endcase
+  
 endmodule
 
 module MUX2_1 #(parameter n = 1) (a,b,sel,out);
@@ -83,8 +93,17 @@ endmodule
 module ALUControl(fn,ALUOp,out);
   input [5:0] fn;
   input [1:0] ALUOp;
-  output [2:0] out;
-  // de facut selectia de operatii bazat pe aluop
+  output reg [2:0] out;
+  always@(ALUOp,fn)
+    casex({ALUOp,fn})
+        8'b00_XXXXXX:out=010;//add
+        8'bX1_XXXXXX:out=110;//sub
+        8'b1X_100000:out=010;//add
+        8'b1X_100010:out=110;//sub
+        8'b1X_100100:out=000;//and
+        8'b1X_100101:out=001;//or
+        8'b1X_101010:out=111;//set less than        
+    endcase
 endmodule
 
 module AND_gate(a,b,out);
@@ -101,9 +120,16 @@ endmodule
 module ALU(a,b,ALUControl,rez,zero);
   input [31:0]a,b;
   input [2:0]ALUControl;
-  output [31:0] rez;
+  output reg [31:0] rez;
   output zero;
-  // calcule de facut
+  always@(ALUControl)
+    casex(ALUControl)
+        3'b010: rez=a+b;//add
+        3'b110: rez=a-b;//sub
+        3'b000: rez=a&b;//and
+        3'b001: rez=a|b;//or
+        3'b111: rez=(a<b);//set less than
+    endcase  
 endmodule
 
 module DataMemory(address,WriteData,MemWrite,ReadData);

@@ -83,8 +83,8 @@ module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOp, MemWrite,
         6'b100011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b0_0_0_1_1_00_0_1_1; //LW
         6'b101011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_0_0_X_00_1_1_0; //SW
         6'b000100: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_1_0_X_01_0_0_0; //BEQ
-        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b1_0_0_0_0_00_0_1_1; //ADDI
-        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_1_0_X_0_XX_0_X_0; //J
+        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b0_0_0_0_0_00_0_1_1; //ADDI
+        6'b000010: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_1_0_X_0_XX_0_X_0; //J
         //doar cateva instructiuni
     endcase
   
@@ -126,7 +126,7 @@ module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData
 //    for(i=0;i<31;i=i+1)
 //       $display("REG %d = %h\n",i,regs[i]);
   end
-  always @(/*posedge clk*/ReadReg1,ReadReg2,WriteReg,RegWrite,WriteData) //flagul
+  always @(posedge clk,ReadReg1,ReadReg2,WriteReg,RegWrite,WriteData) //flagul
     begin
          ReadData1=regs[ReadReg1];
          ReadData2=regs[ReadReg2];
@@ -204,7 +204,7 @@ module ALU(a,b,ALUControl,clk,rez,zero);
   output reg [31:0] rez;
   output zero;
   assign zero=(rez==0);
-  always@(a or b or ALUControl/*posedge clk*/)begin
+  always@(a or b or ALUControl)begin
   
         casex(ALUControl)
             3'b010: rez=a+b;//add

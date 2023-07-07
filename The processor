@@ -6,12 +6,15 @@ module tb;
     wire [2:0] alucontrol;
     wire [1:0] ALUOp;
     wire RegDst,Jump,Branch,MemRead,MemtoReg,MemWrite,ALUSrc,RegWrite,zero,andout;
+    wire [4:0] reg1,reg2;
+    assign reg1 =instr[25:21];
+    assign reg2 =instr[20:16];
     PC pc(nextpc,clk,reset,currentpc);
     Add4 add4(currentpc,pc4);
     InstrMem instrmem(currentpc,instr);
     Control control(instr[31:26],RegDst,Jump,Branch,MemRead,MemtoReg,ALUOp,MemWrite,ALUSrc,RegWrite);
     MUX2_1 #(5) mucs1(instr[20:16],instr[15:11],RegDst,muxreg);
-    Registers regos(instr[25:21], instr[20:16], muxreg, muxdata, RegWrite, ReadData1, ReadData2);
+    Registers regos(clk,instr[25:21], instr[20:16], muxreg, muxdata, RegWrite, ReadData1, ReadData2);
     Sign_Extend sgnext(instr[15:0],extend);
     ALUControl alucrtl(instr[5:0],ALUOp,alucontrol);
     MUX2_1 #(32) mucs2(ReadData2,extend,ALUSrc,muxextend);
@@ -29,8 +32,8 @@ module tb;
     initial begin clk=0; reset=0; end
     initial begin 
     for(i=0;i<50;i=i+1)
-        #5 clk=~clk;
-    #10 $finish();
+        #10 clk=~clk;
+    #100 $finish();
     //#10 $display("PC = %h , Instr = %b\n",currentpc,instr);
     end
 
@@ -46,7 +49,6 @@ module PC(in,clk,reset,out);
     out=0;
     else
     out<=in;
-    $display("BALS BALS%d\n",out);
     end
 endmodule
 
@@ -60,7 +62,7 @@ module InstrMem(in,out);
   // fiecare instructiune are 4bytes
   integer i;
   initial begin
-    $readmemb("instr.mem",instr); //citire de instructiuni toate deodata la inceputul rularii
+    $readmemb("instr.txt",instr); //citire de instructiuni toate deodata la inceputul rularii
     //for(i=0;i<10;i=i+1)
     //$display("INSTRUCTIUNE %d = %b",i,instr[i]);
   end
@@ -109,30 +111,37 @@ module Sign_Extend(in,out);
   assign out = {16'b0,in};
 endmodule
 
-module Registers(ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
+module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
   input [4:0]ReadReg1,ReadReg2,WriteReg; //registrii care sunt reprezentati pe 5 biti
-  input RegWrite; // regwrite flag pentru asta
+  input RegWrite,clk; // regwrite flag pentru asta
   input [31:0] WriteData; //writedata pentru scris in writereg,data pe 32 biti
   output reg [31:0] ReadData1,ReadData2;
   reg [31:0] regs [0:31]; //32 de registrii pe 32 de biti
   integer i;
   initial begin
-  $readmemh("regs.mem",regs);
-  forever regs[0]<=0;//$zero
+  $readmemh("regs.txt",regs);
+  //forever regs[0]<=0;//$zero <-------------------------------------------warning!
 //  for(i=0;i<31;i=i+1) // initializare toti registrii cu 0
 //    regs[i]=0;
 //    for(i=0;i<31;i=i+1)
 //       $display("REG %d = %h\n",i,regs[i]);
   end
-  always @(/*posedge clk*/ ReadReg1,ReadReg2,WriteReg,RegWrite,WriteData) //flagul
+  always @(/*posedge clk*/ReadReg1,ReadReg2,WriteReg,RegWrite,WriteData) //flagul
     begin
+         ReadData1=regs[ReadReg1];
+         ReadData2=regs[ReadReg2];
+       
+    end 
+    always@(negedge clk)begin
         if(RegWrite==1) begin
             regs[WriteReg]<=WriteData; // in registrul writereg scriu writedata
         end
-         ReadData1=regs[ReadReg1];
-         ReadData2=regs[ReadReg2];
-         $display("baler %d %d",ReadData1,ReadData2);
     end
+    /*
+  always @(ReadReg1)
+     ReadData1=regs[ReadReg1];
+  always @(ReadReg2)
+     ReadData2=regs[ReadReg2];*/
 endmodule
 
 module Add4(in,out);
@@ -195,7 +204,7 @@ module ALU(a,b,ALUControl,clk,rez,zero);
   output reg [31:0] rez;
   output zero;
   assign zero=(rez==0);
-  always@(/*a or b or ALUControl*/posedge clk)begin
+  always@(a or b or ALUControl/*posedge clk*/)begin
   
         casex(ALUControl)
             3'b010: rez=a+b;//add
@@ -205,7 +214,6 @@ module ALU(a,b,ALUControl,clk,rez,zero);
             3'b111: rez=(a<b);//set less than
             
         endcase  
-        $display("a=%d b=%d\n",a,b);
     end
 endmodule
 
@@ -217,7 +225,7 @@ module DataMemory(address,WriteData,MemWrite,MemRead,ReadData);
   reg [31:0] memorie [0:199];
   integer i;
   initial  begin
-    $readmemb("data.mem",memorie);
+    $readmemb("data.txt",memorie);
   end
   always@(address or WriteData or MemWrite or MemRead)
     begin

@@ -31,8 +31,8 @@ module tb;
         integer i;
     initial begin clk=0; reset=0; end
     initial begin 
-    for(i=0;i<50;i=i+1)
-        #10 clk=~clk;
+    for(i=0;i<200;i=i+1)
+        #5 clk=~clk;
     #100 $finish();
     //#10 $display("PC = %h , Instr = %b\n",currentpc,instr);
     end
@@ -62,7 +62,7 @@ module InstrMem(in,out);
   // fiecare instructiune are 4bytes
   integer i;
   initial begin
-    $readmemb("instr.txt",instr); //citire de instructiuni toate deodata la inceputul rularii
+    $readmemb("instr.mem",instr); //citire de instructiuni toate deodata la inceputul rularii
     //for(i=0;i<10;i=i+1)
     //$display("INSTRUCTIUNE %d = %b",i,instr[i]);
   end
@@ -119,7 +119,7 @@ module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData
   reg [31:0] regs [0:31]; //32 de registrii pe 32 de biti
   integer i;
   initial begin
-  $readmemh("regs.txt",regs);
+  $readmemh("regs.mem",regs);
   //forever regs[0]<=0;//$zero <-------------------------------------------warning!
 //  for(i=0;i<31;i=i+1) // initializare toti registrii cu 0
 //    regs[i]=0;
@@ -136,6 +136,7 @@ module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData
         if(RegWrite==1) begin
             regs[WriteReg]<=WriteData; // in registrul writereg scriu writedata
         end
+        regs[0]=0;
     end
     /*
   always @(ReadReg1)
@@ -182,6 +183,7 @@ module ALUControl(fn,ALUOp,out);
         8'b1X_100010:out=110;//sub
         8'b1X_100100:out=000;//and
         8'b1X_100101:out=001;//or
+        8'b1X_100110:out=100;//xor
         8'b1X_101010:out=111;//set less than        
     endcase
 endmodule
@@ -211,6 +213,7 @@ module ALU(a,b,ALUControl,clk,rez,zero);
             3'b110: rez=a-b;//sub
             3'b000: rez=a&b;//and
             3'b001: rez=a|b;//or
+            3'b100: rez=a^b;//xor
             3'b111: rez=(a<b);//set less than
             
         endcase  
@@ -222,17 +225,17 @@ module DataMemory(address,WriteData,MemWrite,MemRead,ReadData);
   input MemWrite,MemRead;
   output reg [31:0] ReadData;
   // de facut scriere in memorie
-  reg [31:0] memorie [0:199];
+  reg [7:0] memorie [0:799];
   integer i;
   initial  begin
-    $readmemb("data.txt",memorie);
+    $readmemb("data.mem",memorie);
   end
   always@(address or WriteData or MemWrite or MemRead)
     begin
         if(MemWrite)
-            memorie[address]<=WriteData; // nu e bun asa maybe trebuie schimbat formula pentru adresa
+            {memorie[address+3],memorie[address+2],memorie[address+1],memorie[address+0]}<=WriteData; // nu e bun asa maybe trebuie schimbat formula pentru adresa
         if(MemRead)
-            ReadData<=memorie[address]; // iar probabil nu e bun
+            ReadData<={memorie[address+3],memorie[address+2],memorie[address+1],memorie[address+0]}; // iar probabil nu e bun
         else
             ReadData<=0;    
     end

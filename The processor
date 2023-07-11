@@ -12,14 +12,14 @@ module tb;
     PC pc(nextpc,clk,reset,currentpc);
     Add4 add4(currentpc,pc4);
     InstrMem instrmem(currentpc,instr);
-    Control control(instr[31:26],RegDst,Jump,Branch,MemRead,MemtoReg,ALUOp,MemWrite,ALUSrc,RegWrite);
+    Control control(reset,instr[31:26],RegDst,Jump,Branch,MemRead,MemtoReg,ALUOp,MemWrite,ALUSrc,RegWrite);
     MUX2_1 #(5) mucs1(instr[20:16],instr[15:11],RegDst,muxreg);
-    Registers regos(clk,instr[25:21], instr[20:16], muxreg, muxdata, RegWrite, ReadData1, ReadData2);
+    Registers regos(clk,reset,instr[25:21], instr[20:16], muxreg, muxdata, RegWrite, ReadData1, ReadData2);
     Sign_Extend sgnext(instr[15:0],extend);
     ALUControl alucrtl(instr[5:0],ALUOp,alucontrol);
     MUX2_1 #(32) mucs2(ReadData2,extend,ALUSrc,muxextend);
-    ALU alusu(ReadData1,muxextend,alucontrol,clk,rez,zero);
-    DataMemory datamem(clk,rez,ReadData2,MemWrite,MemRead,dataout);
+    ALU alusu(reset,ReadData1,muxextend,alucontrol,clk,rez,zero);
+    DataMemory datamem(clk,reset,rez,ReadData2,MemWrite,MemRead,dataout);
     MUX2_1 #(32) mucs3(rez,dataout,MemtoReg,muxdata);
     AND_gate andg(Branch,zero,andout);
     ShiftLeft2_32 shft1(extend,shiftextend);
@@ -29,7 +29,7 @@ module tb;
     MUX2_1 #(32) mucs4(pc4,newaddress,andout,muxaddr);//mux intre pc normal si pc cu branch/jump
     MUX2_1 #(32) mucs5(muxaddr,pisic,Jump,nextpc);
         integer i;
-    initial begin clk=0; reset=0; #10 reset=1;#13 reset=0; end
+    initial begin clk=1; reset=1;#11 reset=0;  end
     initial begin 
     for(i=0;i<200;i=i+1)
         #5 clk=~clk;
@@ -46,7 +46,7 @@ module PC(in,clk,reset,out);
   initial out<=32'h10000000;
   always@(posedge clk)begin
     if(reset==1)
-    out=32'h10000000;
+    out<=32'h10000000;
     else
     out<=in;
     end
@@ -67,26 +67,30 @@ module InstrMem(in,out);
     //$display("INSTRUCTIUNE %d = %b",i,instr[i]);
   end
   always@(in) begin
-    out<=instr[(in-32'h10000000)/4]; // initial pc ar trebui sa fie 0x10000000
+    out=instr[(in-32'h10000000)/4]; // initial pc ar trebui sa fie 0x10000000
   end
 endmodule
 
-module Control(opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOp, MemWrite, ALUSrc, RegWrite);
+module Control(reset, opcode, RegDst, Jump, Branch, MemRead, MemToReg, ALUOp, MemWrite, ALUSrc, RegWrite);
   input [5:0] opcode;
+  input reset;
   output reg RegDst, Jump, Branch, MemRead, MemToReg,  MemWrite, ALUSrc, RegWrite;
   output reg [1:0] ALUOp;
   
   // de facut case
-  always@(opcode)
+  always@(opcode or reset)
+  if(reset==0)
     casex(opcode)
-        6'b000000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b1_0_0_0_0_10_0_0_1; //R-TYPE
-        6'b100011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b0_0_0_1_1_00_0_1_1; //LW
-        6'b101011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_0_0_X_00_1_1_0; //SW
-        6'b000100: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_0_1_0_X_01_0_0_0; //BEQ
-        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'b0_0_0_0_0_00_0_1_1; //ADDI
-        6'b000010: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} <= 10'bX_1_0_X_0_XX_0_X_0; //J
+        6'b000000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'b1_0_0_0_0_10_0_0_1; //R-TYPE
+        6'b100011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'b0_0_0_1_1_00_0_1_1; //LW
+        6'b101011: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'bX_0_0_0_X_00_1_1_0; //SW
+        6'b000100: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'bX_0_1_0_X_01_0_0_0; //BEQ
+        6'b001000: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'b0_0_0_0_0_00_0_1_1; //ADDI
+        6'b000010: {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'bX_1_0_X_0_XX_0_X_0; //J
         //doar cateva instructiuni
     endcase
+  else
+    {RegDst, Jump, Branch, MemRead, MemToReg, ALUOp,  MemWrite, ALUSrc, RegWrite} = 10'b0_0_0_0_0_00_0_0_0; //no balls
   
 endmodule
 
@@ -97,9 +101,9 @@ module MUX2_1 #(parameter n = 1) (a,b,sel,out);
   always@(a or b or sel)
    	begin
       if(sel==0)
-        out<=a;
+        out=a;
       else
-        out<=b;
+        out=b;
     end
   
 endmodule
@@ -111,9 +115,9 @@ module Sign_Extend(in,out);
   assign out = {16'b0,in};
 endmodule
 
-module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
+module Registers(clk,reset,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData1, ReadData2);
   input [4:0]ReadReg1,ReadReg2,WriteReg; //registrii care sunt reprezentati pe 5 biti
-  input RegWrite,clk; // regwrite flag pentru asta
+  input RegWrite,clk,reset; // regwrite flag pentru asta
   input [31:0] WriteData; //writedata pentru scris in writereg,data pe 32 biti
   output reg [31:0] ReadData1,ReadData2;
   reg [31:0] regs [0:31]; //32 de registrii pe 32 de biti
@@ -126,19 +130,29 @@ module Registers(clk,ReadReg1, ReadReg2, WriteReg, WriteData, RegWrite, ReadData
 //    for(i=0;i<31;i=i+1)
 //       $display("REG %d = %h\n",i,regs[i]);
   end
-  always @(posedge clk,ReadReg1,ReadReg2,WriteReg,RegWrite,WriteData) //flagul
+  always @(posedge clk,ReadReg1,ReadReg2,WriteReg,RegWrite) //flagul
     begin
-         ReadData1=regs[ReadReg1];
-         ReadData2=regs[ReadReg2];
-       
+        if(reset==0)
+        begin
+         ReadData1<=regs[ReadReg1];
+         ReadData2<=regs[ReadReg2];
+         $display("reg1 = %d   reg2 = %d", ReadData1,ReadData2);
+        end
+        else
+        begin
+         ReadData1<=0;
+         ReadData2<=0;
+        end
     end 
     always@(negedge clk,WriteData)begin
+    if(reset==0)begin
         if(RegWrite==1) begin
         
-            regs[WriteReg]=WriteData; // in registrul writereg scriu writedata
+            regs[WriteReg]<=WriteData; // in registrul writereg scriu writedata
             $display("ce %h",WriteData);
         end
         regs[0]=0;
+    end
     end
     /*
   always @(ReadReg1)
@@ -157,7 +171,7 @@ module ShiftLeft2_26(in,out);
   input [25:0]in;
   output reg [27:0]out;
   always@(in)
-    out<={in,2'b00};
+    out={in,2'b00};
 endmodule
 
 module ShiftLeft2_32(in,out);
@@ -196,20 +210,20 @@ module AND_gate(a,b,out);
   always@(a or b)
     begin
     	if(a==1 && b==1)
-     	 out<=1;
-  		else out<=0;
+     	 out=1;
+  		else out=0;
   	end
 endmodule
 
-module ALU(a,b,ALUControl,clk,rez,zero);
+module ALU(reset,a,b,ALUControl,clk,rez,zero);
   input [31:0]a,b;
   input [2:0]ALUControl;
-  input clk;
+  input clk,reset;
   output reg [31:0] rez;
   output zero;
   assign zero=(rez==0);
   always@(a or b or ALUControl)begin
-  
+    if(reset==0) begin
         casex(ALUControl)
             3'b010: rez=a+b;//add
             3'b110: rez=a-b;//sub
@@ -217,14 +231,16 @@ module ALU(a,b,ALUControl,clk,rez,zero);
             3'b001: rez=a|b;//or
             3'b100: rez=a^b;//xor
             3'b111: rez=(a<b);//set less than
-            
-        endcase  
+        endcase 
+    end 
+    else 
+        rez=0; 
     end
 endmodule
 
-module DataMemory(clk,address,WriteData,MemWrite,MemRead,ReadData);
+module DataMemory(clk,reset,address,WriteData,MemWrite,MemRead,ReadData);
   input [31:0] address, WriteData;
-  input MemWrite,MemRead,clk;
+  input MemWrite,MemRead,clk,reset;
   output reg [31:0] ReadData;
   // de facut scriere in memorie
   reg [31:0] memorie [0:199];
@@ -233,21 +249,22 @@ module DataMemory(clk,address,WriteData,MemWrite,MemRead,ReadData);
     $readmemb("data.mem",memorie);
     
   end
-  always@(posedge clk)
-    begin
-        if(MemRead)begin
-        
-            ReadData=memorie[address];
-            $display("memoria ete %h",memorie[address]);
-            end
-        else
-            ReadData<=0;  
-       
+  always @(posedge clk) begin
+    if (reset == 0) begin
+        if (MemRead) begin
+            ReadData <= memorie[address];
+            $display("memoria ete %h", memorie[address]);
+        end
+    end else begin
+        ReadData <= 0;
     end
+  end
+    
+    
   always@(/*address or WriteData or MemWrite or MemRead or*/ negedge clk)
     begin
         if(MemWrite)begin
-            memorie[address]=WriteData;   
+            memorie[address]<=WriteData;   
             $display("AM SCRIS IN ADRESA %d MEMORIA %h ",address,memorie[address]);
             end 
     end

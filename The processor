@@ -249,7 +249,7 @@ module DataMemory(clk,reset,address,WriteData,MemWrite,MemRead,ReadData);
     $readmemb("data.mem",memorie);
     
   end
-  always @(posedge clk) begin
+  always @(negedge clk) begin
     if (reset == 0) begin
         if (MemRead) begin
             ReadData <= memorie[address];
@@ -261,7 +261,7 @@ module DataMemory(clk,reset,address,WriteData,MemWrite,MemRead,ReadData);
   end
     
     
-  always@(/*address or WriteData or MemWrite or MemRead or*/ negedge clk)
+  always@(/*address or WriteData or MemWrite or MemRead or*/ posedge clk)
     begin
         if(MemWrite)begin
             memorie[address]<=WriteData;   

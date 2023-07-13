@@ -62,9 +62,9 @@ def instr(line,nrinstr):  # line = the entire instruction
         binary_codification.append(rt)
         binary_codification.append(format(int(offset), f"0{16}b"))
     elif opcode in ["add","sub","and","or","xor"]:
-        rt = get_register_binary(components[1].split(',')[0])
+        rd = get_register_binary(components[1].split(',')[0])
         rs = get_register_binary(components[2].split(',')[0])
-        rd = get_register_binary(components[3])
+        rt = get_register_binary(components[3])
         binary_codification.append(rs)
         binary_codification.append(rt)
         binary_codification.append(rd)
